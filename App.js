@@ -3,7 +3,9 @@ import { Button, Image, StyleSheet, Text, View } from 'react-native';
 import { useState, useEffect } from 'react';
 
 /* Importando os recursos da API nativa/móvel */
-import * as ImagePicker from "expo-image-picker"
+import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
+import * as Sharing from "expo-sharing";
 
 export default function App() {
 
@@ -43,18 +45,28 @@ export default function App() {
     }
   };
   const tirarFoto = async () => {
-    const resultado = await ImagePicker.launchCameraAsync({
+    const imagem = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
       aspect: [16, 9],
-      quality: 1
+      quality: 0.5
     });
 
-    if (!resultado.canceled) {
-      setFoto(resultado.assets[0].uri);
+    /* Se o usuário não cancelar, atualizamos o state com a nova foto */
+    if (!imagem.canceled) {
+      /* Usando a API do MediaLibrary para salvar no armazenamento físico do dispositivo */
+      await MediaLibrary.saveToLibraryAsync(imagem.assets[0].uri)
+      setFoto(imagem.assets[0].uri);
     }
   };
-  console.log(foto);
+
+  const compartilhar = async () => {
+    const shared = await Sharing.shareAsync(foto, {
+      mimeType: 'image/jped',
+      dialogTitle: 'Compartilhar Imagem',
+    })
+  }
+
   return (
     <>
       <StatusBar/>
@@ -68,6 +80,9 @@ export default function App() {
         <Text>Sem Foto!</Text>
       )}
     </View>
+
+    <Button onPress={compartilhar} title="Compartilhar"/>
+
     </>
   );
 }
